@@ -1,0 +1,112 @@
+"use client";
+
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SingUpTab } from "./_components/sign-up-tab";
+import { SingInTab } from "./_components/sign-in-tab";
+import { Separator } from "@/components/ui/separator";
+import { SocialAuthButtons } from "./_components/social-auth-buttons";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { authClient } from "@/lib/auth/auth-client";
+import { EmailVerification } from "./_components/email-verification";
+import { ForgotPassword } from "./_components/forgot-password";
+
+type Tab = "signin" | "signup" | "email-verification" | "forgot-password";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [selectedTab, setSelectedTab] = useState<Tab>("signin");
+
+  useEffect(() => {
+    authClient.getSession().then((session) => {
+      if (session.data != null) router.push("/");
+    });
+  }, [router]);
+
+  function openEmailVerificationTab(email: string) {
+    setEmail(email);
+    setSelectedTab("email-verification");
+  }
+
+  return (
+    <Tabs
+      value={selectedTab}
+      onValueChange={(t) => setSelectedTab(t as Tab)}
+      className="max-w-lg w-full my-6 px-4 mx-auto"
+    >
+      {(selectedTab === "signin" || selectedTab === "signup") && (
+        <TabsList>
+          <TabsTrigger value="signin">Нэвтрэх</TabsTrigger>
+          <TabsTrigger value="signup">Бүртгүүлэх</TabsTrigger>
+        </TabsList>
+      )}
+
+      <TabsContent value="signin">
+        <Card>
+          <CardHeader className="text-2xl font-bold">
+            <CardTitle>Нэвтрэх</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SingInTab
+              openEmailVerificationTab={openEmailVerificationTab}
+              openForgotPassword={() => setSelectedTab("forgot-password")}
+            />
+          </CardContent>
+
+          <Separator />
+
+          <CardFooter className="grid grid-cols-2 gap-3">
+            <SocialAuthButtons />
+          </CardFooter>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="signup">
+        <Card>
+          <CardHeader className="text-2xl font-bold">
+            <CardTitle>Бүртгүүлэх</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SingUpTab openEmailVerificationTab={openEmailVerificationTab} />
+          </CardContent>
+
+          <Separator />
+
+          <CardFooter className="grid grid-cols-2 gap-3">
+            <SocialAuthButtons />
+          </CardFooter>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="email-verification">
+        <Card>
+          <CardHeader className="text-2xl font-bold">
+            <CardTitle>Имэйлээ баталгаажуулна уу</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EmailVerification email={email} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="forgot-password">
+        <Card>
+          <CardHeader className="text-2xl font-bold">
+            <CardTitle>Нууц үг сэргээх</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ForgotPassword openSignInTab={() => setSelectedTab("signin")} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+  );
+}
