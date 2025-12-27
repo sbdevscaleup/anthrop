@@ -1,3 +1,9 @@
+import { AccountDeletion } from "@/app/dashboard/profile/_components/account-deletion";
+import { AccountLinking } from "@/app/dashboard/profile/_components/account-linking";
+import { ChangePasswordForm } from "@/app/dashboard/profile/_components/change-password-form";
+import { ProfileUpdateForm } from "@/app/dashboard/profile/_components/profile-update-form";
+import { SessionManagement } from "@/app/dashboard/profile/_components/session-management";
+import { SetPasswordButton } from "@/app/dashboard/profile/_components/set-password-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -21,13 +27,14 @@ import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ProfileUpdateForm } from "./_components/profile-update-form";
 import { ReactNode, Suspense } from "react";
-import { SetPasswordButton } from "./_components/set-password-button";
-import { ChangePasswordForm } from "./_components/change-password-form";
-import { SessionManagement } from "./_components/session-management";
-import { AccountLinking } from "./_components/account-linking";
-import { AccountDeletion } from "./_components/account-deletion";
+// import { ProfileUpdateForm } from "./_components/profile-update-form";
+// import { ReactNode, Suspense } from "react";
+// import { SetPasswordButton } from "./_components/set-password-button";
+// import { ChangePasswordForm } from "./_components/change-password-form";
+// import { SessionManagement } from "./_components/session-management";
+// import { AccountLinking } from "./_components/account-linking";
+// import { AccountDeletion } from "./_components/account-deletion";
 
 export default async function ProfilePage() {
   const session = await auth.api.getSession({ headers: await headers() });

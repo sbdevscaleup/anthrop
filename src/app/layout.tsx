@@ -1,22 +1,40 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Mulish, Roboto } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ImpersonationIndicator } from "@/components/auth/impersonation-indicator";
+import { ThemeProvider } from "@/components/theme-provider";
+import { cn } from "@/lib/utils";
+// import { HeroHeader } from "@/components/header";
+// import Header from "@/components/header"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const mulish = Mulish({
+  weight: "variable",
   subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const roboto = Roboto({
+  weight: "400",
   subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
 });
+
+// const geistSans = Geist({
+//   variable: "--font-geist-sans",
+//   subsets: ["latin"],
+// });
+
+// const geistMono = Geist_Mono({
+//   variable: "--font-geist-mono",
+//   subsets: ["latin"],
+// });
 
 export const metadata: Metadata = {
-  title: "Final Project",
-  description: "Real Estate App",
+  title: "Property MN",
+  description: "Real Estate Platform",
 };
 
 export default function RootLayout({
@@ -25,11 +43,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
+        className={cn(
+          "antialiased overscroll-none bg-background",
+          roboto.variable,
+          mulish.variable
+        )}
       >
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
         <Toaster />
         <ImpersonationIndicator />
       </body>

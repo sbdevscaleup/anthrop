@@ -32,7 +32,7 @@ const signInSchema = z.object({
 
 type SignInForm = z.infer<typeof signInSchema>;
 
-export function SingInTab({
+export function SignInTab({
   openEmailVerificationTab,
   openForgotPassword,
 }: {

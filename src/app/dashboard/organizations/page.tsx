@@ -3,10 +3,9 @@ import Link from "next/link";
 import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-
-import { CreateOrganizationButton } from "./_components/create-organization-button";
-import { OrganizationTabs } from "./_components/organization-tabs";
-import { OrganizationSelect } from "./_components/organization-select";
+import { OrganizationSelect } from "@/app/dashboard/organizations/_components/organization-select";
+import { CreateOrganizationButton } from "@/app/dashboard/organizations/_components/create-organization-button";
+import { OrganizationTabs } from "@/app/dashboard/organizations/_components/organization-tabs";
 
 export default async function OrganizationsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -14,7 +13,7 @@ export default async function OrganizationsPage() {
 
   return (
     <div className="container mx-auto my-6 px-4">
-      <Link href="/" className="inline-flex items-center mb-6">
+      <Link href="/dashboard" className="inline-flex items-center mb-6">
         <ArrowLeft className="size-4 mr-2" />
         Back to Home
       </Link>

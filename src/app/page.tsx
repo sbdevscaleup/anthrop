@@ -23,47 +23,49 @@ export default function Home() {
   }
 
   return (
-    <div className="my-6 px-4 max-w-md mx-auto">
-      <div className="text-center space-y-6">
-        {session == null ? (
-          <>
-            <h1 className="text-3xl front-bold">Тавтай морил</h1>
-            {/* TODO: Add Loading States */}
-            <Button asChild size="lg">
-              <Link href="/auth/login">Нэвтрэх / Бүртгүүлэх</Link>
-            </Button>
-          </>
-        ) : (
-          <>
-            <h1 className="text-3xl front-bold">
-              Тавтай морил {session.user.name}!
-            </h1>
-            <div className="flex gap-4 justify-center">
+    <main>
+      <div className="px-4 max-w-md mx-auto">
+        <div className="text-center space-y-6">
+          {session == null ? (
+            <>
+              <h1 className="text-3xl front-bold">Тавтай морил</h1>
+              {/* TODO: Add Loading States */}
               <Button asChild size="lg">
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/auth/login">Нэвтрэх / Бүртгүүлэх</Link>
               </Button>
-              <Button asChild size="lg">
-                <Link href="/profile">Профайл</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/organizations">Байгууллага</Link>
-              </Button>
-              {hasAdminPermission && (
-                <Button variant="outline" asChild size="lg">
-                  <Link href="/admin">Админ</Link>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl front-bold">
+                Тавтай морил {session.user.name}!
+              </h1>
+              <div className="flex gap-4 justify-center">
+                <Button asChild size="lg">
+                  <Link href="/dashboard">Dashboard</Link>
                 </Button>
-              )}
-              <BetterAuthActionButton
-                size="lg"
-                variant="destructive"
-                action={() => authClient.signOut()}
-              >
-                Гарах
-              </BetterAuthActionButton>
-            </div>
-          </>
-        )}
+                <Button asChild size="lg">
+                  <Link href="/profile">Профайл</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/organizations">Байгууллага</Link>
+                </Button>
+                {hasAdminPermission && (
+                  <Button variant="outline" asChild size="lg">
+                    <Link href="/admin">Админ</Link>
+                  </Button>
+                )}
+                <BetterAuthActionButton
+                  size="lg"
+                  variant="destructive"
+                  action={() => authClient.signOut()}
+                >
+                  Гарах
+                </BetterAuthActionButton>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

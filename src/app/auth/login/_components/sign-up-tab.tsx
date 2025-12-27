@@ -35,7 +35,7 @@ const signUpSchema = z.object({
 
 type SignUpForm = z.infer<typeof signUpSchema>;
 
-export function SingUpTab({
+export function SignUpTab({
   openEmailVerificationTab,
 }: {
   openEmailVerificationTab: (email: string) => void;

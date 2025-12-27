@@ -8,8 +8,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SingUpTab } from "./_components/sign-up-tab";
-import { SingInTab } from "./_components/sign-in-tab";
 import { Separator } from "@/components/ui/separator";
 import { SocialAuthButtons } from "./_components/social-auth-buttons";
 import { useRouter } from "next/navigation";
@@ -17,6 +15,8 @@ import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth/auth-client";
 import { EmailVerification } from "./_components/email-verification";
 import { ForgotPassword } from "./_components/forgot-password";
+import { SignInTab } from "./_components/sign-in-tab";
+import { SignUpTab } from "./_components/sign-up-tab";
 
 type Tab = "signin" | "signup" | "email-verification" | "forgot-password";
 
@@ -55,7 +55,7 @@ export default function LoginPage() {
             <CardTitle>Нэвтрэх</CardTitle>
           </CardHeader>
           <CardContent>
-            <SingInTab
+            <SignInTab
               openEmailVerificationTab={openEmailVerificationTab}
               openForgotPassword={() => setSelectedTab("forgot-password")}
             />
@@ -75,7 +75,7 @@ export default function LoginPage() {
             <CardTitle>Бүртгүүлэх</CardTitle>
           </CardHeader>
           <CardContent>
-            <SingUpTab openEmailVerificationTab={openEmailVerificationTab} />
+            <SignUpTab openEmailVerificationTab={openEmailVerificationTab} />
           </CardContent>
 
           <Separator />
