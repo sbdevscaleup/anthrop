@@ -44,3 +44,37 @@ export const roleAssignmentEnum = pgEnum("role_assignment", [
   "agency_admin",
   "admin",
 ]);
+
+export const outboxStatusEnum = pgEnum("outbox_status", [
+  "pending",
+  "processing",
+  "completed",
+  "failed",
+]);
+
+export const notificationChannelEnum = pgEnum("notification_channel", [
+  "in_app",
+  "email",
+  "push",
+]);
+
+export const rentalApplicationStatusEnum = pgEnum("rental_application_status", [
+  "draft",
+  "submitted",
+  "under_review",
+  "approved",
+  "rejected",
+  "withdrawn",
+]);
+
+export const threadParticipantRoleEnum = pgEnum("thread_participant_role", [
+  "owner",
+  "agent",
+  "inquirer",
+  "admin",
+]);
+
+export const threadMessageTypeEnum = pgEnum("thread_message_type", [
+  "text",
+  "system",
+]);
