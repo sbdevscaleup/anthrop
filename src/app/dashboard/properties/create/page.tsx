@@ -1,57 +1,62 @@
 "use client";
 
-import { propertyStatusEnum } from "@/drizzle/schema";
-import { useAppForm } from "@/components/form/hooks";
-import { createProperty } from "../actions/property";
+import z from "zod";
 import { toast } from "sonner";
+import { useAppForm } from "@/components/form/hooks";
 import { FieldGroup } from "@/components/ui/field";
 import { SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import z from "zod";
+import {
+  listingTypeEnum,
+  propertyLocationSourceEnum,
+  propertyTypeEnum,
+  propertyWorkflowStatusEnum,
+} from "@/drizzle/schema";
+import { createProperty } from "../actions/property";
 
-// Add form validation schema
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  status: z.enum(propertyStatusEnum.enumValues),
   description: z.string().optional(),
+  propertyType: z.enum(propertyTypeEnum.enumValues),
+  listingType: z.enum(listingTypeEnum.enumValues),
+  workflowStatus: z.enum(propertyWorkflowStatusEnum.enumValues),
+  locationSource: z.enum(propertyLocationSourceEnum.enumValues),
+  l2Id: z.string().uuid().optional(),
+  currencyCode: z.string().length(3),
 });
 
 export default function CreatePropertyPage() {
   const form = useAppForm({
     defaultValues: {
       title: "",
-      status: "draft",
       description: "",
+      propertyType: propertyTypeEnum.enumValues[0],
+      listingType: listingTypeEnum.enumValues[0],
+      workflowStatus: "draft",
+      locationSource: "manual",
+      l2Id: "",
+      currencyCode: "MNT",
     } satisfies z.infer<typeof formSchema>,
-    // Validate with Zod on submit (remove incompatible validators option)
     onSubmit: async ({ value }) => {
-      // run client-side Zod validation so types and values match the server action
       const parsed = formSchema.safeParse(value);
       if (!parsed.success) {
-        console.error("Validation failed", parsed.error);
-        toast.error("Validation failed — please check the fields");
+        toast.error("Validation failed. Please check the form fields.");
         return;
       }
 
-      console.log("Creating property with values:", parsed.data);
+      const payload = {
+        ...parsed.data,
+        l2Id: parsed.data.l2Id || undefined,
+      };
 
-      const res = await createProperty(parsed.data);
-
+      const res = await createProperty(payload);
       if (res.success) {
-        console.log("Property created successfully:", res);
         form.reset();
-        toast.success(
-          "Property created successfully! - Үл хөдлөх хөрөнгө амжилттай үүслээ!",
-          {
-            description: JSON.stringify(parsed.data, null, 2),
-            className: "whitespace-pre-wrap font-mono",
-          }
-        );
+        toast.success("Property created");
       } else {
-        console.error("Failed to create property:", res);
-        toast.error(
-          "Failed to create property. - Үл хөдлөх хөрөнгө үүсгэхэд алдаа гарлаа."
-        );
+        const rootError =
+          res.errors && "root" in res.errors ? res.errors.root?.[0] : undefined;
+        toast.error(rootError ?? "Failed to create property");
       }
     },
   });
@@ -59,8 +64,8 @@ export default function CreatePropertyPage() {
   return (
     <div className="container px-4 mx-auto my-6">
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={(event) => {
+          event.preventDefault();
           form.handleSubmit();
         }}
       >
@@ -69,23 +74,77 @@ export default function CreatePropertyPage() {
             {(field) => <field.Input label="Title" />}
           </form.AppField>
 
-          <form.AppField name="status">
+          <form.AppField name="description">
             {(field) => (
-              <field.Select label="Status">
-                {propertyStatusEnum.enumValues.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status}
+              <field.Textarea
+                label="Description"
+                description="Optional listing description"
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="propertyType">
+            {(field) => (
+              <field.Select label="Property Type">
+                {propertyTypeEnum.enumValues.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
                   </SelectItem>
                 ))}
               </field.Select>
             )}
           </form.AppField>
 
-          <form.AppField name="description">
+          <form.AppField name="listingType">
             {(field) => (
-              <field.Textarea
-                label="Description"
-                description="Be as detailed as possible"
+              <field.Select label="Listing Type">
+                {listingTypeEnum.enumValues.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </field.Select>
+            )}
+          </form.AppField>
+
+          <form.AppField name="workflowStatus">
+            {(field) => (
+              <field.Select label="Workflow Status">
+                {propertyWorkflowStatusEnum.enumValues.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </field.Select>
+            )}
+          </form.AppField>
+
+          <form.AppField name="locationSource">
+            {(field) => (
+              <field.Select label="Location Source">
+                {propertyLocationSourceEnum.enumValues.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </field.Select>
+            )}
+          </form.AppField>
+
+          <form.AppField name="l2Id">
+            {(field) => (
+              <field.Input
+                label="District/Soum (l2Id)"
+                description="Required in manual mode. UUID from admin_l2."
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="currencyCode">
+            {(field) => (
+              <field.Input
+                label="Currency Code"
+                description="ISO currency code (e.g. MNT)"
               />
             )}
           </form.AppField>

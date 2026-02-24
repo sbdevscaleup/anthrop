@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { Settings, User } from "lucide-react";
-import Link from "next/link";
+import { Settings, User } from "lucide-react"
+import Link from "next/link"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,20 +9,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 // import { Button } from "@/components/ui/button";
 // import { useTheme } from "next-themes";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { authClient } from "@/lib/auth/auth-client";
-import { BetterAuthActionButton } from "@/components/auth/better-auth-action-button";
-import { useRouter } from "next/navigation";
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ThemeSwitcher } from "@/components/theme-switcher"
+import { authClient } from "@/lib/auth/auth-client"
+import { BetterAuthActionButton } from "@/components/auth/better-auth-action-button"
+import { useRouter } from "next/navigation"
 
 export default function Navbar() {
-  const router = useRouter();
+  const router = useRouter()
   return (
-    <nav className="p-4 flex items-center justify-between sticky top-0 bg-background z-10 border-b border-border">
+    <nav className="p-4 flex items-center justify-between sticky top-0 bg-background border-b border-border z-10">
       {/* LEFT */}
       <SidebarTrigger />
 
@@ -56,9 +56,9 @@ export default function Navbar() {
                 className="w-full"
                 variant="secondary"
                 action={async () => {
-                  await authClient.signOut();
-                  router.push("/");
-                  return { error: null };
+                  await authClient.signOut()
+                  router.push("/")
+                  return { error: null }
                 }}
               >
                 Гарах
@@ -68,5 +68,5 @@ export default function Navbar() {
         </DropdownMenu>
       </div>
     </nav>
-  );
+  )
 }

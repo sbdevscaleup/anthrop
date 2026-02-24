@@ -1,14 +1,14 @@
-import { auth } from "@/lib/auth/auth";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth/auth"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (session == null) return redirect("/auth/login");
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (session == null) return redirect("/auth/login")
 
   return (
-    <div className="p-4">
+    <div className="px-2 py-4">
       <h1>Hi, this is MAIN Dashboard Page</h1>
     </div>
-  );
+  )
 }

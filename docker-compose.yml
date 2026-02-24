@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:17.0
+    image: postgis/postgis:17-3.5
     hostname: ${DB_HOST}
     ports:
       - "5432:${DB_PORT}"
