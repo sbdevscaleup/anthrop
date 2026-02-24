@@ -5,3 +5,4 @@ export * from "./schemas/users";
 export * from "./schemas/admin-core";
 export * from "./schemas/property-core";
 export * from "./schemas/audit-core";
+export * from "./schemas/platform-core";
