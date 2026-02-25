@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/modules/auth/application/session";
+import { getRequiredWebSession } from "@/app/api/_shared/session";
 import { getNotificationsQuerySchema } from "@/modules/notifications/contracts";
 import { listNotificationsForUser } from "@/modules/notifications/service";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getRequiredSession();
+    const session = await getRequiredWebSession();
     const parsed = getNotificationsQuerySchema.safeParse({
       limit: request.nextUrl.searchParams.get("limit") ?? undefined,
       cursor: request.nextUrl.searchParams.get("cursor") ?? undefined,

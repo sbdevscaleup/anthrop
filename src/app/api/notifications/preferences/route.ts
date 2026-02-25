@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/modules/auth/application/session";
+import { getRequiredWebSession } from "@/app/api/_shared/session";
 import { notificationPreferenceSchema } from "@/modules/notifications/contracts";
 import { upsertNotificationPreference } from "@/modules/notifications/service";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getRequiredSession();
+    const session = await getRequiredWebSession();
     const parsed = notificationPreferenceSchema.safeParse(await request.json());
 
     if (!parsed.success) {

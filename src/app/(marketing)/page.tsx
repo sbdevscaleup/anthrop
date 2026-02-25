@@ -1,80 +1,18 @@
-"use client"
-
-import { BetterAuthActionButton } from "@/modules/auth/ui/better-auth-action-button"
-import MapDemo from "@/modules/properties/ui/map-demo"
-import { Button } from "@/shared/ui/button"
-import { LoadingSwap } from "@/shared/ui/loading-swap"
-import { authClient } from "@/modules/auth/application/auth-client"
-import Link from "next/link"
-import { useEffect, useState } from "react"
+import MapDemo from "@/modules/properties/ui/map-demo";
 
 export default function Home() {
-  const [hasAdminPermission, setHasAdminPermission] = useState(false)
-  const { data: session, isPending: loading } = authClient.useSession()
-
-  useEffect(() => {
-    authClient.admin
-      .hasPermission({ permission: { user: ["list"] } })
-      .then(({ data }) => {
-        setHasAdminPermission(data?.success ?? false)
-      })
-  })
-
   return (
-    <>
-      <main>
-        <div className="p-4 max-w-md mx-auto">
-          <div className="text-center space-y-10">
-            {session == null ? (
-              <>
-                <h1 className="text-3xl front-bold">
-                  Welcome to Mongolia's Real Estate Platform
-                </h1>
-                {loading ? (
-                  <Button size="lg" disabled>
-                    <LoadingSwap isLoading={true}>Loading auth...</LoadingSwap>
-                  </Button>
-                ) : (
-                  <Button asChild size="lg">
-                    <Link href="/auth/login">Login / Register</Link>
-                  </Button>
-                )}
-              </>
-            ) : (
-              <>
-                <h1 className="text-3xl front-bold">
-                  Welcome {session.user.name}!
-                </h1>
-                <div className="flex gap-4 justify-center">
-                  <Button asChild size="lg">
-                    <Link href="/dashboard">Dashboard</Link>
-                  </Button>
-                  <Button asChild size="lg">
-                    <Link href="/profile">Profile</Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline">
-                    <Link href="/organizations">Organization</Link>
-                  </Button>
-                  {hasAdminPermission && (
-                    <Button variant="outline" asChild size="lg">
-                      <Link href="/admin">Admin</Link>
-                    </Button>
-                  )}
-                  <BetterAuthActionButton
-                    size="lg"
-                    variant="destructive"
-                    action={() => authClient.signOut()}
-                  >
-                    ?????
-                  </BetterAuthActionButton>
-                </div>
-              </>
-            )}
-            {/* DEMO MAP */}
-            <MapDemo />
-          </div>
-        </div>
-      </main>
-    </>
-  )
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-12">
+      <section className="mb-8 text-center md:mb-10">
+        <h1 className="text-balance text-3xl font-semibold tracking-tight md:text-5xl">
+          Find your next home in Mongolia
+        </h1>
+        <p className="text-muted-foreground mx-auto mt-4 max-w-2xl">
+          Discover listings to buy or rent, connect with trusted agents, and
+          manage your property journey in one place.
+        </p>
+      </section>
+      <MapDemo />
+    </main>
+  );
 }

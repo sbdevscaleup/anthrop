@@ -1,12 +1,22 @@
-import { headers } from "next/headers";
-import { auth } from "@/modules/auth/infrastructure/auth";
+export type AuthSession = {
+  user: {
+    id: string;
+  };
+  session: {
+    activeOrganizationId?: string | null;
+  };
+};
 
-export async function getSessionOrNull() {
-  return auth.api.getSession({ headers: await headers() });
+export interface SessionProvider {
+  getSession(): Promise<AuthSession | null>;
 }
 
-export async function getRequiredSession() {
-  const session = await getSessionOrNull();
+export async function getSessionOrNull(provider: SessionProvider) {
+  return provider.getSession();
+}
+
+export async function getRequiredSession(provider: SessionProvider) {
+  const session = await getSessionOrNull(provider);
   if (!session) {
     throw new Error("UNAUTHENTICATED");
   }

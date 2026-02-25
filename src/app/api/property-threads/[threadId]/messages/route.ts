@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/modules/auth/application/session";
+import { getRequiredWebSession } from "@/app/api/_shared/session";
 import { sendMessageInputSchema } from "@/modules/property-threads/contracts";
 import { sendMessage } from "@/modules/property-threads/service";
 
@@ -8,7 +8,7 @@ export async function POST(
   context: { params: Promise<{ threadId: string }> },
 ) {
   try {
-    const session = await getRequiredSession();
+    const session = await getRequiredWebSession();
     const { threadId } = await context.params;
     const parsed = sendMessageInputSchema.safeParse(await request.json());
 

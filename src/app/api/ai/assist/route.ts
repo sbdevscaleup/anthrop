@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/modules/auth/application/session";
+import { getRequiredWebSession } from "@/app/api/_shared/session";
 import { assistRequestSchema } from "@/modules/ai/contracts";
 import { assist } from "@/modules/ai/service";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getRequiredSession();
+    const session = await getRequiredWebSession();
     const parsed = assistRequestSchema.safeParse(await request.json());
     if (!parsed.success) {
       return NextResponse.json(

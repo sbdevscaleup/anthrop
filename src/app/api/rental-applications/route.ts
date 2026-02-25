@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/modules/auth/application/session";
+import { getRequiredWebSession } from "@/app/api/_shared/session";
 import {
   createRentalApplicationInputSchema,
   listRentalApplicationsQuerySchema,
@@ -11,7 +11,7 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getRequiredSession();
+    const session = await getRequiredWebSession();
     const parsed = createRentalApplicationInputSchema.safeParse(
       await request.json(),
     );
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getRequiredSession();
+    const session = await getRequiredWebSession();
     const parsed = listRentalApplicationsQuerySchema.safeParse({
       propertyId: request.nextUrl.searchParams.get("propertyId") ?? undefined,
       status: request.nextUrl.searchParams.get("status") ?? undefined,

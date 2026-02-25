@@ -10,9 +10,24 @@ import { sendDeleteAccountVerificationEmail } from "@/modules/auth/infrastructur
 import { admin as adminPlugin } from "better-auth/plugins/admin";
 import { ac, admin, user } from "@/modules/auth/domain/permissions";
 import { organization } from "better-auth/plugins/organization";
+import { phoneNumber } from "better-auth/plugins";
 import { sendOrganizationInviteEmail } from "@/modules/auth/infrastructure/emails/organization-invite-emails";
 import { member } from "@/infrastructure/db/schema";
 import { desc, eq } from "drizzle-orm";
+import {
+  isPhoneNumberSupported,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+} from "@/modules/auth/infrastructure/phone-otp-provider";
+
+const phoneOtpLength = Number.parseInt(process.env.PHONE_OTP_LENGTH ?? "6", 10);
+const phoneOtpExpiresInSeconds = Number.parseInt(
+  process.env.PHONE_OTP_EXPIRES_IN_SECONDS ?? "300",
+  10,
+);
+const useProviderManagedOtpVerification =
+  process.env.PHONE_OTP_PROVIDER?.toLowerCase() === "callpro" &&
+  Boolean(process.env.CALLPRO_OTP_VERIFY_API_URL);
 
 export const auth = betterAuth({
   appName: "Anthrop App",
@@ -102,6 +117,27 @@ export const auth = betterAuth({
           email,
         });
       },
+    }),
+    phoneNumber({
+      otpLength: Number.isNaN(phoneOtpLength) ? 6 : phoneOtpLength,
+      expiresIn: Number.isNaN(phoneOtpExpiresInSeconds)
+        ? 300
+        : phoneOtpExpiresInSeconds,
+      requireVerification: true,
+      phoneNumberValidator: async (phoneNumber) => {
+        return isPhoneNumberSupported(phoneNumber);
+      },
+      sendOTP: async ({ phoneNumber, code }) => {
+        await sendPhoneOtp({ phoneNumber, code });
+      },
+      ...(useProviderManagedOtpVerification
+        ? {
+            verifyOTP: async ({ phoneNumber, code }) => {
+              const result = await verifyPhoneOtp({ phoneNumber, code });
+              return result === true;
+            },
+          }
+        : {}),
     }),
   ],
   database: drizzleAdapter(db, {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/modules/auth/application/session";
+import { getRequiredWebSession } from "@/app/api/_shared/session";
 import { getAiSessionForUser } from "@/modules/ai/service";
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getRequiredSession();
+    const session = await getRequiredWebSession();
     const { id } = await context.params;
     const result = await getAiSessionForUser(id, session.user.id);
 

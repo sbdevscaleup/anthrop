@@ -16,6 +16,7 @@ export const user = pgTable("user", {
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
   phoneNumber: text("phone_number").notNull(),
+  phoneNumberVerified: boolean("phone_number_verified").default(false).notNull(),
 });
 
 export const session = pgTable("session", {
