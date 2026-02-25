@@ -12,7 +12,7 @@
     "db:push": "drizzle-kit push",
     "db:import:geo": "tsx src/scripts/import-admin-geometries.ts",
     "db:backfill:core": "tsx src/scripts/backfill-core-schema.ts",
-    "auth:generate": "npx @better-auth/cli@latest generate --config ./src/lib/auth/auth.ts --output ./src/drizzle/schemas/new-auth-schema.ts --yes",
+    "auth:generate": "npx @better-auth/cli@latest generate --config ./src/modules/auth/infrastructure/auth.ts --output ./src/infrastructure/db/schema/new-auth-schema.ts --yes",
     "lint": "eslint"
   },
   "dependencies": {
