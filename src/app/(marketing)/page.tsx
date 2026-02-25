@@ -1,4 +1,4 @@
-import MapDemo from "@/modules/properties/ui/map-demo";
+import MapDemo from "@/modules/properties/ui/map-demo"
 
 export default function Home() {
   return (
@@ -14,5 +14,5 @@ export default function Home() {
       </section>
       <MapDemo />
     </main>
-  );
+  )
 }
