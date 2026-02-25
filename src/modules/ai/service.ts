@@ -1,11 +1,11 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "@/drizzle/db";
+import { db } from "@/infrastructure/db/client";
 import {
   aiFeedback,
   aiInteraction,
   aiRedactionAudit,
   aiSession,
-} from "@/drizzle/schema";
+} from "@/infrastructure/db/schema";
 import type { AssistRequest, AssistResponse, RedactionReport } from "./contracts";
 import { emitDomainEvent } from "../events/service";
 
@@ -152,4 +152,3 @@ export async function createAiFeedback(
 
   return saved;
 }
-

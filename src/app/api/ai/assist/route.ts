@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/lib/auth/session";
+import { getRequiredSession } from "@/modules/auth/application/session";
 import { assistRequestSchema } from "@/modules/ai/contracts";
 import { assist } from "@/modules/ai/service";
 
@@ -40,4 +40,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

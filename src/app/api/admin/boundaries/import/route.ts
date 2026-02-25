@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { activateBoundaryDatasetVersion } from "@/lib/geo/import-boundary-dataset";
+import { activateBoundaryDatasetVersion } from "@/modules/admin-boundaries/infrastructure/import-boundary-dataset";
 
 const payloadSchema = z.object({
   version: z.string().min(1),

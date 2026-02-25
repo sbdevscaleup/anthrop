@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/lib/auth/session";
+import { getRequiredSession } from "@/modules/auth/application/session";
 import { getAiSessionForUser } from "@/modules/ai/service";
 
 export async function GET(
@@ -33,4 +33,3 @@ export async function GET(
     );
   }
 }
-

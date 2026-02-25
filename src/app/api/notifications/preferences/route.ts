@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/lib/auth/session";
+import { getRequiredSession } from "@/modules/auth/application/session";
 import { notificationPreferenceSchema } from "@/modules/notifications/contracts";
 import { upsertNotificationPreference } from "@/modules/notifications/service";
 
@@ -34,4 +34,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

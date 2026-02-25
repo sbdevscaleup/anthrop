@@ -4,15 +4,15 @@ Last updated: February 16, 2026
 
 This document describes the current canonical database schema after the core rewrite and legacy-table cleanup. It is based on:
 
-- `src/drizzle/schemas/auth-schema.ts`
-- `src/drizzle/schemas/enums.ts`
-- `src/drizzle/schemas/core-enums.ts`
-- `src/drizzle/schemas/users.ts`
-- `src/drizzle/schemas/admin-core.ts`
-- `src/drizzle/schemas/property-core.ts`
-- `src/drizzle/schemas/audit-core.ts`
-- `src/drizzle/migrations/0002_marketplace_core_rewrite.sql`
-- `src/drizzle/migrations/0003_drop_legacy_schema.sql`
+- `src/infrastructure/db/schemas/auth-schema.ts`
+- `src/infrastructure/db/schemas/enums.ts`
+- `src/infrastructure/db/schemas/core-enums.ts`
+- `src/infrastructure/db/schemas/users.ts`
+- `src/infrastructure/db/schemas/admin-core.ts`
+- `src/infrastructure/db/schemas/property-core.ts`
+- `src/infrastructure/db/schemas/audit-core.ts`
+- `src/infrastructure/db/migrations/0002_marketplace_core_rewrite.sql`
+- `src/infrastructure/db/migrations/0003_drop_legacy_schema.sql`
 
 ## Scope and Design Principles
 
@@ -26,7 +26,7 @@ This document describes the current canonical database schema after the core rew
 
 ## Enum Catalog
 
-## Existing enums (`src/drizzle/schemas/enums.ts`)
+## Existing enums (`src/infrastructure/db/schemas/enums.ts`)
 
 - `UserRole`: `buyer | seller | agent | agency_admin | admin`
 - `PropertyType`: `house | apartment | land | commercial`
@@ -34,7 +34,7 @@ This document describes the current canonical database schema after the core rew
 - `ListingType`: `sale | rent`
 - `InquiryStatus`: `new | contacted | scheduled | closed`
 
-## Core rewrite enums (`src/drizzle/schemas/core-enums.ts`)
+## Core rewrite enums (`src/infrastructure/db/schemas/core-enums.ts`)
 
 - `admin_l1_type`: `province | capital_city`
 - `admin_l2_type`: `district | soum`

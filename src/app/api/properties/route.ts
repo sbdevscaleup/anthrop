@@ -1,7 +1,7 @@
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/drizzle/db";
-import { property } from "@/drizzle/schema";
+import { db } from "@/infrastructure/db/client";
+import { property } from "@/infrastructure/db/schema";
 
 const MAX_LIMIT = 100;
 

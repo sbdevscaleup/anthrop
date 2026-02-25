@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/lib/auth/session";
+import { getRequiredSession } from "@/modules/auth/application/session";
 import { sendMessageInputSchema } from "@/modules/property-threads/contracts";
 import { sendMessage } from "@/modules/property-threads/service";
 
@@ -38,4 +38,3 @@ export async function POST(
     );
   }
 }
-

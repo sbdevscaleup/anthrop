@@ -1,12 +1,12 @@
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
-import { db } from "@/drizzle/db";
+import { db } from "@/infrastructure/db/client";
 import {
   messageReadState,
   property,
   propertyThread,
   threadMessage,
   threadParticipant,
-} from "@/drizzle/schema";
+} from "@/infrastructure/db/schema";
 import type { CreateThreadInput, SendMessageInput } from "./contracts";
 import { emitDomainEvent } from "../events/service";
 

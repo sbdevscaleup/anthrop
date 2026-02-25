@@ -1,11 +1,11 @@
 import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
-import { db } from "@/drizzle/db";
+import { db } from "@/infrastructure/db/client";
 import {
   rentalApplication,
   rentalApplicationDocument,
   rentalApplicationSnapshot,
   property,
-} from "@/drizzle/schema";
+} from "@/infrastructure/db/schema";
 import { emitDomainEvent } from "../events/service";
 import type {
   CreateRentalApplicationInput,
