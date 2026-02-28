@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import z from "zod";
-import { toast } from "sonner";
-import { useAppForm } from "@/shared/form/hooks";
-import { FieldGroup } from "@/shared/ui/field";
-import { SelectItem } from "@/shared/ui/select";
-import { Button } from "@/shared/ui/button";
+import z from "zod"
+import { toast } from "sonner"
+import { useAppForm } from "@/shared/form/hooks"
+import { FieldGroup } from "@/shared/ui/field"
+import { SelectItem } from "@/shared/ui/select"
+import { Button } from "@/shared/ui/button"
 import {
   listingTypeEnum,
   propertyLocationSourceEnum,
   propertyTypeEnum,
   propertyWorkflowStatusEnum,
-} from "@/infrastructure/db/schema";
-import { createProperty } from "../actions/property";
+} from "@/infrastructure/db/schema"
+import { createProperty } from "../actions/property"
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -23,7 +23,7 @@ const formSchema = z.object({
   locationSource: z.enum(propertyLocationSourceEnum.enumValues),
   l2Id: z.string().uuid().optional(),
   currencyCode: z.string().length(3),
-});
+})
 
 export default function CreatePropertyPage() {
   const form = useAppForm({
@@ -38,38 +38,50 @@ export default function CreatePropertyPage() {
       currencyCode: "MNT",
     } satisfies z.infer<typeof formSchema>,
     onSubmit: async ({ value }) => {
-      const parsed = formSchema.safeParse(value);
+      const parsed = formSchema.safeParse(value)
       if (!parsed.success) {
-        toast.error("Validation failed. Please check the form fields.");
-        return;
+        toast.error("Validation failed. Please check the form fields.")
+        return
       }
 
       const payload = {
         ...parsed.data,
         l2Id: parsed.data.l2Id || undefined,
-      };
+      }
 
-      const res = await createProperty(payload);
+      const res = await createProperty(payload)
       if (res.success) {
-        form.reset();
-        toast.success("Property created");
+        form.reset()
+        toast.success("Property created")
       } else {
         const rootError =
-          res.errors && "root" in res.errors ? res.errors.root?.[0] : undefined;
-        toast.error(rootError ?? "Failed to create property");
+          res.errors && "root" in res.errors ? res.errors.root?.[0] : undefined
+        toast.error(rootError ?? "Failed to create property")
       }
     },
-  });
+  })
 
   return (
     <div className="container px-4 mx-auto my-6">
       <form
         onSubmit={(event) => {
-          event.preventDefault();
-          form.handleSubmit();
+          event.preventDefault()
+          form.handleSubmit()
         }}
       >
         <FieldGroup>
+          <form.AppField name="listingType">
+            {(field) => (
+              <field.Select label="Listing Type">
+                {listingTypeEnum.enumValues.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </field.Select>
+            )}
+          </form.AppField>
+
           <form.AppField name="title">
             {(field) => <field.Input label="Title" />}
           </form.AppField>
@@ -87,18 +99,6 @@ export default function CreatePropertyPage() {
             {(field) => (
               <field.Select label="Property Type">
                 {propertyTypeEnum.enumValues.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </field.Select>
-            )}
-          </form.AppField>
-
-          <form.AppField name="listingType">
-            {(field) => (
-              <field.Select label="Listing Type">
-                {listingTypeEnum.enumValues.map((option) => (
                   <SelectItem key={option} value={option}>
                     {option}
                   </SelectItem>
@@ -155,5 +155,5 @@ export default function CreatePropertyPage() {
         </Button>
       </form>
     </div>
-  );
+  )
 }

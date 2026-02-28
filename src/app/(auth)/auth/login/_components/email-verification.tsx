@@ -2,7 +2,13 @@ import { BetterAuthActionButton } from "@/modules/auth/ui/better-auth-action-but
 import { authClient } from "@/modules/auth/application/auth-client";
 import { useEffect, useRef, useState } from "react";
 
-export function EmailVerification({ email }: { email: string }) {
+export function EmailVerification({
+  email,
+  callbackURL = "/",
+}: {
+  email: string;
+  callbackURL?: string;
+}) {
   const [timeToNextResend, setTimeToNextResend] = useState(30);
   const interval = useRef<NodeJS.Timeout>(undefined);
 
@@ -43,7 +49,7 @@ export function EmailVerification({ email }: { email: string }) {
           startEmailVerificationCountdown();
           return authClient.sendVerificationEmail({
             email,
-            callbackURL: "/",
+            callbackURL,
           });
         }}
       >

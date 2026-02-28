@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LogOut, Menu, User } from "lucide-react";
 import { authClient } from "@/modules/auth/application/auth-client";
 import { MARKETING_NAV_ITEMS } from "@/shared/config/marketing-nav";
@@ -34,7 +34,12 @@ export function MarketingHeader({ showAuthActions = true }: MarketingHeaderProps
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = authClient.useSession();
-  const loggedIn = session != null;
+  const [isHydrated, setIsHydrated] = useState(false);
+  const loggedIn = isHydrated && session != null;
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const initials = useMemo(() => {
     if (!session?.user?.name) return "U";
@@ -114,10 +119,10 @@ export function MarketingHeader({ showAuthActions = true }: MarketingHeaderProps
             ) : (
               <>
                 <Button asChild variant="outline">
-                  <Link href="/auth/login">Login</Link>
+                  <Link href="/auth">Login</Link>
                 </Button>
                 <Button asChild>
-                  <Link href="/auth/login?mode=signup">Sign up</Link>
+                  <Link href="/auth">Sign up</Link>
                 </Button>
               </>
             ))}
@@ -182,12 +187,12 @@ export function MarketingHeader({ showAuthActions = true }: MarketingHeaderProps
                     <div className="flex flex-col gap-2">
                       <SheetClose asChild>
                         <Button asChild variant="outline" className="w-full">
-                          <Link href="/auth/login">Login</Link>
+                          <Link href="/auth">Login</Link>
                         </Button>
                       </SheetClose>
                       <SheetClose asChild>
                         <Button asChild className="w-full">
-                          <Link href="/auth/login?mode=signup">Sign up</Link>
+                          <Link href="/auth">Sign up</Link>
                         </Button>
                       </SheetClose>
                     </div>
@@ -201,4 +206,3 @@ export function MarketingHeader({ showAuthActions = true }: MarketingHeaderProps
     </header>
   );
 }
-

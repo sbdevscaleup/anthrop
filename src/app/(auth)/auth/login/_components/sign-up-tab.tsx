@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
+import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -16,30 +17,29 @@ import { PasswordInput } from "@/shared/ui/password-input";
 import { Button } from "@/shared/ui/button";
 import { LoadingSwap } from "@/shared/ui/loading-swap";
 import { authClient } from "@/modules/auth/application/auth-client";
+import type { AuthPersona } from "@/modules/auth/domain/personas";
 import { toast } from "sonner";
 
 const signUpSchema = z.object({
-  name: z.string().min(1, {
-    message: "Хэт богино байна! Нэр дор хаяж 1 тэмдэгтээс бүрдэнэ.",
-  }),
-  email: z
-    .email({ message: "Имэйл хаяг буруу байна. Зөв имэйл хаяг оруулна уу." })
-    .min(1, {
-      message: "Имэйл хаяг хоосон байж болохгүй.",
-    }),
-  password: z.string().min(6, {
-    message: "Хэт богино байна! Нууц үг дор хаяж 6 тэмдэгтээс бүрдэнэ.",
-  }),
-  phoneNumber: z.string().min(8),
+  name: z.string().min(1, "Name is required"),
+  email: z.email().min(1, "Email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  phoneNumber: z.string().min(8, "Phone number is required"),
 });
 
 type SignUpForm = z.infer<typeof signUpSchema>;
 
-export function SignUpTab({
+export function PersonaSignUpForm({
+  callbackURL,
+  submitLabel,
   openEmailVerificationTab,
 }: {
+  persona: AuthPersona;
+  callbackURL: string;
+  submitLabel: string;
   openEmailVerificationTab: (email: string) => void;
 }) {
+  const router = useRouter();
   const form = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -54,16 +54,21 @@ export function SignUpTab({
 
   async function handleSignUp(data: SignUpForm) {
     const res = await authClient.signUp.email(
-      { ...data, callbackURL: "/" },
+      { ...data, callbackURL },
       {
         onError: (error) => {
           toast.error(error.error.message || "Failed to sign up");
         },
-      }
+      },
     );
 
     if (res.error == null && !res.data.user.emailVerified) {
       openEmailVerificationTab(data.email);
+      return;
+    }
+
+    if (res.error == null) {
+      router.replace(callbackURL);
     }
   }
 
@@ -75,7 +80,7 @@ export function SignUpTab({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Нэр</FormLabel>
+              <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -89,7 +94,7 @@ export function SignUpTab({
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Имэйл хаяг</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input type="email" {...field} />
               </FormControl>
@@ -103,7 +108,7 @@ export function SignUpTab({
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Нууц үг</FormLabel>
+              <FormLabel>Password</FormLabel>
               <FormControl>
                 <PasswordInput {...field} />
               </FormControl>
@@ -117,7 +122,7 @@ export function SignUpTab({
           name="phoneNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Утасны дугаар</FormLabel>
+              <FormLabel>Phone number</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -127,9 +132,11 @@ export function SignUpTab({
         />
 
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          <LoadingSwap isLoading={isSubmitting}>Бүртгэл үүсгэх</LoadingSwap>
+          <LoadingSwap isLoading={isSubmitting}>{submitLabel}</LoadingSwap>
         </Button>
       </form>
     </Form>
   );
 }
+
+export const SignUpTab = PersonaSignUpForm;

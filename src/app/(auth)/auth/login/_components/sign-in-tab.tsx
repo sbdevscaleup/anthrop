@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
+import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -16,26 +17,25 @@ import { PasswordInput } from "@/shared/ui/password-input";
 import { Button } from "@/shared/ui/button";
 import { LoadingSwap } from "@/shared/ui/loading-swap";
 import { authClient } from "@/modules/auth/application/auth-client";
+import type { AuthPersona } from "@/modules/auth/domain/personas";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 const signInSchema = z.object({
-  email: z
-    .email({ message: "Имэйл хаяг буруу байна. Зөв имэйл хаяг оруулна уу." })
-    .min(1, {
-      message: "Имэйл хаяг хоосон байж болохгүй.",
-    }),
-  password: z.string().min(6, {
-    message: "Хэт богино байна! Нууц үг дор хаяж 6 тэмдэгтээс бүрдэнэ.",
-  }),
+  email: z.email().min(1, "Email is required"),
+  password: z.string().min(6, "Password is required"),
 });
 
 type SignInForm = z.infer<typeof signInSchema>;
 
-export function SignInTab({
+export function PersonaSignInForm({
+  callbackURL,
+  submitLabel,
   openEmailVerificationTab,
   openForgotPassword,
 }: {
+  persona: AuthPersona;
+  callbackURL: string;
+  submitLabel: string;
   openEmailVerificationTab: (email: string) => void;
   openForgotPassword: () => void;
 }) {
@@ -52,7 +52,7 @@ export function SignInTab({
 
   async function handleSignIn(data: SignInForm) {
     await authClient.signIn.email(
-      { ...data, callbackURL: "/" },
+      { ...data, callbackURL },
       {
         onError: (error) => {
           if (error.error.code === "EMAIL_NOT_VERIFIED") {
@@ -61,9 +61,9 @@ export function SignInTab({
           toast.error(error.error.message || "Failed to sign in");
         },
         onSuccess: () => {
-          router.push("/");
+          router.replace(callbackURL);
         },
-      }
+      },
     );
   }
 
@@ -75,7 +75,7 @@ export function SignInTab({
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Имэйл хаяг</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input type="email" {...field} />
               </FormControl>
@@ -88,22 +88,15 @@ export function SignInTab({
           control={form.control}
           name="password"
           render={({ field }) => (
-            // <FormItem>
-            //   <FormLabel>Нууц үг</FormLabel>
-            //   <FormControl>
-            //     <PasswordInput {...field} />
-            //   </FormControl>
-            //   <FormMessage />
-            // </FormItem>
             <FormItem>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <FormLabel>Password</FormLabel>
                 <Button
                   onClick={openForgotPassword}
                   type="button"
                   variant="link"
                   size="sm"
-                  className="text-sm font-normal underline"
+                  className="px-0 text-sm font-normal underline"
                 >
                   Forgot password?
                 </Button>
@@ -117,9 +110,11 @@ export function SignInTab({
         />
 
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          <LoadingSwap isLoading={isSubmitting}>Нэвтэх</LoadingSwap>
+          <LoadingSwap isLoading={isSubmitting}>{submitLabel}</LoadingSwap>
         </Button>
       </form>
     </Form>
   );
 }
+
+export const SignInTab = PersonaSignInForm;

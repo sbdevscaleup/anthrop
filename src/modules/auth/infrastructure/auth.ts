@@ -78,15 +78,6 @@ export const auth = betterAuth({
         };
       },
     },
-    discord: {
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-      mapProfileToUser: () => {
-        return {
-          phoneNumber: "00000000",
-        };
-      },
-    },
   },
   session: {
     cookieCache: {

@@ -22,7 +22,7 @@ import { UserRow } from "./_components/user-row";
 export default async function AdminPage() {
   const session = await auth.api.getSession({ headers: await headers() });
 
-  if (session == null) return redirect("/auth/login");
+  if (session == null) return redirect("/auth");
   const hasAccess = await auth.api.userHasPermission({
     headers: await headers(),
     body: { permission: { user: ["list"] } },

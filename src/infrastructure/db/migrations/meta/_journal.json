@@ -12,22 +12,43 @@
     {
       "idx": 1,
       "version": "7",
+      "when": 1767338045047,
+      "tag": "0001_user_roles_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
       "when": 1771290000000,
       "tag": "0002_marketplace_core_rewrite",
       "breakpoints": true
     },
     {
-      "idx": 2,
+      "idx": 3,
       "version": "7",
       "when": 1771293600000,
       "tag": "0003_drop_legacy_schema",
       "breakpoints": true
     },
     {
-      "idx": 3,
+      "idx": 4,
       "version": "7",
       "when": 1772016000000,
       "tag": "0004_post_mvp_expansion",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772102400000,
+      "tag": "0005_add_phone_number_verified",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772188800000,
+      "tag": "0006_add_renter_role",
       "breakpoints": true
     }
   ]

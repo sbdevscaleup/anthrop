@@ -9,7 +9,7 @@ import { OrganizationTabs } from "@/app/(dashboard)/dashboard/organizations/_com
 
 export default async function OrganizationsPage() {
   const session = await auth.api.getSession({ headers: await headers() })
-  if (session == null) return redirect("/auth/login")
+  if (session == null) return redirect("/auth")
 
   return (
     <div className="container mx-auto my-4 px-4">

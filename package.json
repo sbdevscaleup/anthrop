@@ -8,6 +8,7 @@
     "start": "next start",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:verify": "tsx src/scripts/verify-drizzle-state.ts",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "db:import:geo": "tsx src/scripts/import-admin-geometries.ts",

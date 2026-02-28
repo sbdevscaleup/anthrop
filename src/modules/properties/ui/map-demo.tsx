@@ -62,7 +62,8 @@ export default function MapDemo() {
   const mapRef = useRef<mapboxgl.Map | null>(null)
 
   useEffect(() => {
-    if (mapRef.current || !mapContainerRef.current) return
+    const container = mapContainerRef.current
+    if (mapRef.current || !container) return
 
     const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
     if (!token) return
@@ -72,15 +73,16 @@ export default function MapDemo() {
     let disposed = false
     let hoveredFeatureId: string | number | null = null
     const markers: mapboxgl.Marker[] = []
+    let resizeObserver: ResizeObserver | null = null
 
     const init = async () => {
       const response = await fetch(khorooDataUrl)
       const khorooBoundaries =
         (await response.json()) as GeoJSON.FeatureCollection
-      if (disposed || !mapContainerRef.current) return
+      if (disposed) return
 
       const map = new mapboxgl.Map({
-        container: mapContainerRef.current,
+        container,
         style: "mapbox://styles/mapbox/streets-v12",
         center: [107.08, 47.86],
         zoom: 9.2,
@@ -88,8 +90,18 @@ export default function MapDemo() {
 
       mapRef.current = map
       map.addControl(new mapboxgl.NavigationControl(), "top-right")
+      requestAnimationFrame(() => {
+        if (!disposed) map.resize()
+      })
+
+      resizeObserver = new ResizeObserver(() => {
+        if (!disposed) map.resize()
+      })
+      resizeObserver.observe(container)
 
       map.on("load", () => {
+        map.resize()
+
         map.addSource("khoroos", {
           type: "geojson",
           data: khorooBoundaries,
@@ -199,6 +211,7 @@ export default function MapDemo() {
 
     return () => {
       disposed = true
+      resizeObserver?.disconnect()
       for (const marker of markers) marker.remove()
       mapRef.current?.remove()
       mapRef.current = null
@@ -224,7 +237,7 @@ export default function MapDemo() {
       ) : null}
 
       <div className="overflow-hidden rounded-lg border">
-        <div ref={mapContainerRef} className="h-[560px] w-full" />
+        <div ref={mapContainerRef} className="h-140 w-full" />
       </div>
     </div>
   )

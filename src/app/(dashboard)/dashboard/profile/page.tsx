@@ -38,7 +38,7 @@ import { ReactNode, Suspense } from "react";
 
 export default async function ProfilePage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (session == null) return redirect("auth/login");
+  if (session == null) return redirect("/auth");
 
   return (
     <div className="max-w-4xl mx-auto my-6 px-4">

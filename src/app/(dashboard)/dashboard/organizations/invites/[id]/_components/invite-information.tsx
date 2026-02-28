@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import { BetterAuthActionButton } from "@/modules/auth/ui/better-auth-action-button";
-import { authClient } from "@/modules/auth/application/auth-client";
-import { useRouter } from "next/navigation";
+import { BetterAuthActionButton } from "@/modules/auth/ui/better-auth-action-button"
+import { authClient } from "@/modules/auth/application/auth-client"
+import { useRouter } from "next/navigation"
 
 export function InviteInformation({
   invitation,
 }: {
-  invitation: { id: string; organizationId: string };
+  invitation: { id: string; organizationId: string }
 }) {
-  const router = useRouter();
+  const router = useRouter()
 
   function acceptInvite() {
     return authClient.organization.acceptInvitation(
@@ -18,33 +18,33 @@ export function InviteInformation({
         onSuccess: async () => {
           await authClient.organization.setActive({
             organizationId: invitation.organizationId,
-          });
-          router.push("/organizations");
+          })
+          router.push("/dashboard/organizations")
         },
-      }
-    );
+      },
+    )
   }
   function rejectInvite() {
     return authClient.organization.rejectInvitation(
       {
         invitationId: invitation.id,
       },
-      { onSuccess: () => router.push("/") }
-    );
+      { onSuccess: () => router.push("/") },
+    )
   }
 
   return (
     <div className="flex gap-4">
-      <BetterAuthActionButton className="flex-grow" action={acceptInvite}>
+      <BetterAuthActionButton className="grow" action={acceptInvite}>
         Accept
       </BetterAuthActionButton>
       <BetterAuthActionButton
-        className="flex-grow"
+        className="grow"
         variant="destructive"
         action={rejectInvite}
       >
         Reject
       </BetterAuthActionButton>
     </div>
-  );
+  )
 }

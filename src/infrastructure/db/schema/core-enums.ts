@@ -40,6 +40,7 @@ export const mediaTypeEnum = pgEnum("property_media_type", [
 export const roleAssignmentEnum = pgEnum("role_assignment", [
   "buyer",
   "seller",
+  "renter",
   "agent",
   "agency_admin",
   "admin",
