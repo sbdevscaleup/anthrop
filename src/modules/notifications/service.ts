@@ -1,6 +1,6 @@
 import { and, desc, eq, lt } from "drizzle-orm";
-import { db } from "@/drizzle/db";
-import { notification, notificationPreference } from "@/drizzle/schema";
+import { db } from "@/infrastructure/db/client";
+import { notification, notificationPreference } from "@/infrastructure/db/schema";
 import {
   type NotificationEvent,
   type NotificationPreference,

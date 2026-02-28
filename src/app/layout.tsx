@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 import "./globals.css"
-import { Toaster } from "@/components/ui/sonner"
-import { ImpersonationIndicator } from "@/components/auth/impersonation-indicator"
-import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils"
+import { Toaster } from "@/shared/ui/sonner"
+import { ImpersonationIndicator } from "@/modules/auth/ui/impersonation-indicator"
+import { ThemeProvider } from "@/shared/ui/theme/theme-provider"
+import { cn } from "@/shared/lib/utils"
 
 export const metadata: Metadata = {
   title: "Property MN",

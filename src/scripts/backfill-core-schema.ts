@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { db } from "../drizzle/db";
+import { db } from "../infrastructure/db/client";
 
 async function backfillAdminHierarchy() {
   await db.execute(sql`

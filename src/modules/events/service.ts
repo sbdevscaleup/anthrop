@@ -1,5 +1,5 @@
-import { db } from "@/drizzle/db";
-import { domainEvent, eventOutbox } from "@/drizzle/schema";
+import { db } from "@/infrastructure/db/client";
+import { domainEvent, eventOutbox } from "@/infrastructure/db/schema";
 type NotificationChannel = "in_app" | "email" | "push";
 
 export type EmitDomainEventInput = {

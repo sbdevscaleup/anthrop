@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredSession } from "@/lib/auth/session";
+import { getRequiredWebSession } from "@/app/api/_shared/session";
 import {
   createThreadInputSchema,
   listThreadsQuerySchema,
@@ -11,7 +11,7 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getRequiredSession();
+    const session = await getRequiredWebSession();
     const parsed = createThreadInputSchema.safeParse(await request.json());
     if (!parsed.success) {
       return NextResponse.json(
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getRequiredSession();
+    const session = await getRequiredWebSession();
     const parsed = listThreadsQuerySchema.safeParse({
       propertyId: request.nextUrl.searchParams.get("propertyId") ?? undefined,
       limit: request.nextUrl.searchParams.get("limit") ?? undefined,
@@ -78,4 +78,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
