@@ -1,23 +1,30 @@
 import { relations } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   customType,
   index,
   integer,
   jsonb,
   numeric,
   pgTable,
+  primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { user, organization } from "./auth-schema";
 import { listingTypeEnum, propertyTypeEnum, inquiryStatusEnum } from "./enums";
 import {
+  mediaAccessLevelEnum,
   mediaTypeEnum,
+  propertyAttributeScopeEnum,
+  propertyAttributeValueTypeEnum,
   propertyLocationPrecisionEnum,
   propertyLocationSourceEnum,
   propertyPublishStateEnum,
+  uploadAssetStatusEnum,
   propertyWorkflowStatusEnum,
 } from "./core-enums";
 import { adminL1, adminL2, adminL3 } from "./admin-core";
@@ -71,6 +78,8 @@ export const property = pgTable(
     l1Id: uuid("l1_id").references(() => adminL1.id, { onDelete: "set null" }),
     l2Id: uuid("l2_id").references(() => adminL2.id, { onDelete: "set null" }),
     l3Id: uuid("l3_id").references(() => adminL3.id, { onDelete: "set null" }),
+    categoryId: uuid("category_id"),
+    subcategoryId: uuid("subcategory_id"),
 
     addressText: text("address_text"),
     featuresJson: jsonb("features_json").default({}).notNull(),
@@ -93,6 +102,12 @@ export const property = pgTable(
     index("property_workflow_status_idx").on(table.workflowStatus),
     index("property_listing_type_idx").on(table.listingType),
     index("property_price_minor_idx").on(table.priceMinor),
+    index("property_category_subcategory_listing_workflow_idx").on(
+      table.categoryId,
+      table.subcategoryId,
+      table.listingType,
+      table.workflowStatus,
+    ),
     index("property_l2_status_listing_idx").on(
       table.l2Id,
       table.workflowStatus,
@@ -106,6 +121,165 @@ export const property = pgTable(
   ],
 );
 
+export const propertyCategory = pgTable(
+  "property_category",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("property_category_slug_uidx").on(table.slug),
+    index("property_category_is_active_idx").on(table.isActive),
+  ],
+);
+
+export const propertySubcategory = pgTable(
+  "property_subcategory",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => propertyCategory.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("property_subcategory_category_slug_uidx").on(
+      table.categoryId,
+      table.slug,
+    ),
+    index("property_subcategory_category_id_idx").on(table.categoryId),
+  ],
+);
+
+export const propertyAttributeDefinition = pgTable(
+  "property_attribute_definition",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    code: text("code").notNull(),
+    label: text("label").notNull(),
+    valueType: propertyAttributeValueTypeEnum("value_type").notNull(),
+    unit: text("unit"),
+    isFilterable: boolean("is_filterable").default(false).notNull(),
+    isRequired: boolean("is_required").default(false).notNull(),
+    scope: propertyAttributeScopeEnum("scope").default("global").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [uniqueIndex("property_attribute_definition_code_uidx").on(table.code)],
+);
+
+export const propertySubcategoryAttribute = pgTable(
+  "property_subcategory_attribute",
+  {
+    subcategoryId: uuid("subcategory_id")
+      .notNull()
+      .references(() => propertySubcategory.id, { onDelete: "cascade" }),
+    attributeId: uuid("attribute_id")
+      .notNull()
+      .references(() => propertyAttributeDefinition.id, { onDelete: "cascade" }),
+    isRequired: boolean("is_required").default(false).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.subcategoryId, table.attributeId] }),
+    index("property_subcategory_attribute_subcategory_id_idx").on(table.subcategoryId),
+  ],
+);
+
+export const propertyAttributeOption = pgTable(
+  "property_attribute_option",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    attributeId: uuid("attribute_id")
+      .notNull()
+      .references(() => propertyAttributeDefinition.id, { onDelete: "cascade" }),
+    value: text("value").notNull(),
+    label: text("label").notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+  },
+  (table) => [
+    uniqueIndex("property_attribute_option_attribute_value_uidx").on(
+      table.attributeId,
+      table.value,
+    ),
+    index("property_attribute_option_attribute_id_idx").on(table.attributeId),
+  ],
+);
+
+export const propertyAttributeValue = pgTable(
+  "property_attribute_value",
+  {
+    propertyId: uuid("property_id")
+      .notNull()
+      .references(() => property.id, { onDelete: "cascade" }),
+    attributeId: uuid("attribute_id")
+      .notNull()
+      .references(() => propertyAttributeDefinition.id, { onDelete: "cascade" }),
+    numberValue: numeric("number_value", { precision: 14, scale: 2 }),
+    textValue: text("text_value"),
+    booleanValue: boolean("boolean_value"),
+    optionId: uuid("option_id").references(() => propertyAttributeOption.id, {
+      onDelete: "set null",
+    }),
+    jsonValue: jsonb("json_value"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.propertyId, table.attributeId] }),
+    index("property_attribute_value_attribute_id_idx").on(table.attributeId),
+    index("property_attribute_value_property_id_idx").on(table.propertyId),
+    index("property_attribute_value_number_idx").on(table.attributeId, table.numberValue),
+    index("property_attribute_value_boolean_idx").on(table.attributeId, table.booleanValue),
+  ],
+);
+
+export const propertyRentalTerms = pgTable(
+  "property_rental_terms",
+  {
+    propertyId: uuid("property_id")
+      .notNull()
+      .primaryKey()
+      .references(() => property.id, { onDelete: "cascade" }),
+    hoaFeeMinor: bigint("hoa_fee_minor", { mode: "number" }),
+    furnished: boolean("furnished"),
+    leaseTermMonths: integer("lease_term_months"),
+    depositMinor: bigint("deposit_minor", { mode: "number" }),
+    utilitiesIncludedJson: jsonb("utilities_included_json").default({}),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("property_rental_terms_furnished_idx").on(table.furnished),
+    index("property_rental_terms_hoa_fee_minor_idx").on(table.hoaFeeMinor),
+  ],
+);
+
 export const propertyMedia = pgTable(
   "property_media",
   {
@@ -113,7 +287,16 @@ export const propertyMedia = pgTable(
     propertyId: uuid("property_id")
       .notNull()
       .references(() => property.id, { onDelete: "cascade" }),
-    url: text("url").notNull(),
+    url: text("url"),
+    storageKey: text("storage_key"),
+    bucket: text("bucket"),
+    accessLevel: mediaAccessLevelEnum("access_level").default("public").notNull(),
+    mimeType: text("mime_type"),
+    bytes: bigint("bytes", { mode: "number" }),
+    checksum: text("checksum"),
+    uploadStatus: uploadAssetStatusEnum("upload_status")
+      .default("uploaded")
+      .notNull(),
     mediaType: mediaTypeEnum("media_type").default("image").notNull(),
     sortOrder: integer("sort_order").default(0).notNull(),
     metadataJson: jsonb("metadata_json").default({}).notNull(),
@@ -123,6 +306,7 @@ export const propertyMedia = pgTable(
   (table) => [
     index("property_media_property_id_idx").on(table.propertyId),
     index("property_media_sort_order_idx").on(table.sortOrder),
+    uniqueIndex("property_media_storage_key_uidx").on(table.storageKey),
   ],
 );
 
@@ -228,3 +412,27 @@ export const propertyInquiryRelations = relations(propertyInquiry, ({ one }) => 
     references: [user.id],
   }),
 }));
+
+export const propertyCategoryRelations = relations(propertyCategory, ({ many }) => ({
+  subcategories: many(propertySubcategory),
+}));
+
+export const propertySubcategoryRelations = relations(
+  propertySubcategory,
+  ({ one, many }) => ({
+    category: one(propertyCategory, {
+      fields: [propertySubcategory.categoryId],
+      references: [propertyCategory.id],
+    }),
+    attributes: many(propertySubcategoryAttribute),
+  }),
+);
+
+export const propertyAttributeDefinitionRelations = relations(
+  propertyAttributeDefinition,
+  ({ many }) => ({
+    subcategoryMappings: many(propertySubcategoryAttribute),
+    options: many(propertyAttributeOption),
+    values: many(propertyAttributeValue),
+  }),
+);

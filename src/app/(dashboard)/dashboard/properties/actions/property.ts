@@ -10,10 +10,19 @@ import {
   adminL2,
   adminL3,
   listingTypeEnum,
+  mediaTypeEnum,
   property,
+  propertyAttributeDefinition,
+  propertyAttributeOption,
+  propertyAttributeValue,
+  propertyCategory,
   propertyLocationSourceEnum,
+  propertyMedia,
+  propertyRentalTerms,
+  propertySubcategory,
   propertyTypeEnum,
   propertyWorkflowStatusEnum,
+  uploadAsset,
 } from "@/infrastructure/db/schema";
 import { resolveAdminUnitsByPoint } from "@/modules/admin-boundaries/infrastructure/resolve-admin-units";
 
@@ -21,6 +30,7 @@ const locationSourceValues = propertyLocationSourceEnum.enumValues;
 const propertyTypeValues = propertyTypeEnum.enumValues;
 const listingTypeValues = listingTypeEnum.enumValues;
 const workflowValues = propertyWorkflowStatusEnum.enumValues;
+const mediaTypeValues = mediaTypeEnum.enumValues;
 
 const propertySchema = z
   .object({
@@ -37,6 +47,29 @@ const propertySchema = z
     l3Id: z.string().uuid().optional(),
     priceMinor: z.number().int().nonnegative().optional(),
     currencyCode: z.string().min(3).max(3).default("MNT"),
+    categorySlug: z.string().min(1).optional(),
+    subcategorySlug: z.string().min(1).optional(),
+    attributes: z.record(z.string(), z.unknown()).optional(),
+    rentalTerms: z
+      .object({
+        hoaFeeMinor: z.number().int().nonnegative().optional(),
+        furnished: z.boolean().optional(),
+        leaseTermMonths: z.number().int().positive().optional(),
+        depositMinor: z.number().int().nonnegative().optional(),
+        utilitiesIncluded: z.record(z.string(), z.boolean()).optional(),
+      })
+      .optional(),
+    uploadedMedia: z
+      .array(
+        z.object({
+          fileId: z.string().uuid(),
+          storageKey: z.string().min(1),
+          mediaType: z.enum(mediaTypeValues).optional(),
+          sortOrder: z.number().int().nonnegative().optional(),
+        }),
+      )
+      .max(30)
+      .optional(),
   })
   .superRefine((value, ctx) => {
     if (value.locationSource === "pin") {
@@ -137,6 +170,25 @@ export async function createProperty(unsafeData: PropertyInput) {
       precision = resolvedL3Id ? "l3" : "l2";
     }
 
+    const categorySlug = data.data.categorySlug ?? data.data.propertyType;
+    const category = await db.query.propertyCategory.findFirst({
+      where: and(
+        eq(propertyCategory.slug, categorySlug),
+        eq(propertyCategory.isActive, true),
+      ),
+    });
+
+    const subcategorySlug = data.data.subcategorySlug ?? categorySlug;
+    const subcategory = category
+      ? await db.query.propertySubcategory.findFirst({
+          where: and(
+            eq(propertySubcategory.categoryId, category.id),
+            eq(propertySubcategory.slug, subcategorySlug),
+            eq(propertySubcategory.isActive, true),
+          ),
+        })
+      : null;
+
     const [created] = await db
       .insert(property)
       .values({
@@ -152,10 +204,187 @@ export async function createProperty(unsafeData: PropertyInput) {
         l1Id: resolvedL1Id,
         l2Id: resolvedL2Id,
         l3Id: resolvedL3Id,
+        categoryId: category?.id ?? null,
+        subcategoryId: subcategory?.id ?? null,
         priceMinor: data.data.priceMinor ?? null,
         currencyCode: data.data.currencyCode,
       })
       .returning();
+
+    if (!created) {
+      return { success: false, errors: { root: ["Failed to create property"] } };
+    }
+
+    const inputAttributes = data.data.attributes ?? {};
+    const allDefinitions = await db.select().from(propertyAttributeDefinition);
+    const defByCode = new Map(allDefinitions.map((d) => [d.code, d]));
+
+    const attributeRows: Array<
+      typeof propertyAttributeValue.$inferInsert
+    > = [];
+    for (const [code, rawValue] of Object.entries(inputAttributes)) {
+      const definition = defByCode.get(code);
+      if (!definition || rawValue == null) continue;
+
+      const base = {
+        propertyId: created.id,
+        attributeId: definition.id,
+      } as const;
+
+      if (definition.valueType === "number") {
+        const num = Number(rawValue);
+        if (!Number.isNaN(num)) {
+          attributeRows.push({ ...base, numberValue: String(num) });
+        }
+        continue;
+      }
+
+      if (definition.valueType === "boolean") {
+        if (typeof rawValue === "boolean") {
+          attributeRows.push({ ...base, booleanValue: rawValue });
+        }
+        continue;
+      }
+
+      if (definition.valueType === "string") {
+        attributeRows.push({ ...base, textValue: String(rawValue) });
+        continue;
+      }
+
+      if (definition.valueType === "json") {
+        attributeRows.push({ ...base, jsonValue: rawValue });
+        continue;
+      }
+
+      if (definition.valueType === "enum") {
+        const option = await db.query.propertyAttributeOption.findFirst({
+          where: and(
+            eq(propertyAttributeOption.attributeId, definition.id),
+            eq(propertyAttributeOption.value, String(rawValue)),
+          ),
+        });
+        if (option) {
+          attributeRows.push({ ...base, optionId: option.id });
+        }
+      }
+    }
+
+    if (attributeRows.length > 0) {
+      for (const row of attributeRows) {
+        await db
+          .insert(propertyAttributeValue)
+          .values(row)
+          .onConflictDoUpdate({
+            target: [propertyAttributeValue.propertyId, propertyAttributeValue.attributeId],
+            set: {
+              numberValue: row.numberValue ?? null,
+              textValue: row.textValue ?? null,
+              booleanValue: row.booleanValue ?? null,
+              optionId: row.optionId ?? null,
+              jsonValue: row.jsonValue ?? null,
+              updatedAt: new Date(),
+            },
+          });
+      }
+    }
+
+    if (data.data.listingType === "rent" && data.data.rentalTerms) {
+      await db
+        .insert(propertyRentalTerms)
+        .values({
+          propertyId: created.id,
+          hoaFeeMinor: data.data.rentalTerms.hoaFeeMinor ?? null,
+          furnished: data.data.rentalTerms.furnished ?? null,
+          leaseTermMonths: data.data.rentalTerms.leaseTermMonths ?? null,
+          depositMinor: data.data.rentalTerms.depositMinor ?? null,
+          utilitiesIncludedJson: data.data.rentalTerms.utilitiesIncluded ?? {},
+        })
+        .onConflictDoUpdate({
+          target: propertyRentalTerms.propertyId,
+          set: {
+            hoaFeeMinor: data.data.rentalTerms.hoaFeeMinor ?? null,
+            furnished: data.data.rentalTerms.furnished ?? null,
+            leaseTermMonths: data.data.rentalTerms.leaseTermMonths ?? null,
+            depositMinor: data.data.rentalTerms.depositMinor ?? null,
+            utilitiesIncludedJson: data.data.rentalTerms.utilitiesIncluded ?? {},
+            updatedAt: new Date(),
+          },
+        });
+    }
+
+    if ((data.data.uploadedMedia?.length ?? 0) > 0) {
+      for (const [index, mediaInput] of (data.data.uploadedMedia ?? []).entries()) {
+        const uploaded = await db.query.uploadAsset.findFirst({
+          where: and(
+            eq(uploadAsset.id, mediaInput.fileId),
+            eq(uploadAsset.userId, userId),
+            isNull(uploadAsset.deletedAt),
+          ),
+        });
+
+        if (!uploaded) {
+          return {
+            success: false,
+            errors: { root: [`Upload asset not found: ${mediaInput.fileId}`] },
+          };
+        }
+
+        if (uploaded.storageKey !== mediaInput.storageKey) {
+          return {
+            success: false,
+            errors: {
+              root: [`Upload storage key mismatch: ${mediaInput.fileId}`],
+            },
+          };
+        }
+
+        if (uploaded.uploadStatus !== "uploaded" && uploaded.uploadStatus !== "attached") {
+          return {
+            success: false,
+            errors: {
+              root: [`Upload has not completed: ${mediaInput.fileId}`],
+            },
+          };
+        }
+
+        const fallbackUrl = `r2://${uploaded.bucket}/${uploaded.storageKey}`;
+        const mediaUrl = uploaded.publicUrl ?? fallbackUrl;
+
+        await db.insert(propertyMedia).values({
+          propertyId: created.id,
+          url: mediaUrl,
+          storageKey: uploaded.storageKey,
+          bucket: uploaded.bucket,
+          accessLevel: uploaded.accessLevel,
+          mimeType: uploaded.mimeType,
+          bytes: uploaded.bytes ?? null,
+          checksum: uploaded.checksum ?? null,
+          uploadStatus: "attached",
+          mediaType:
+            mediaInput.mediaType ??
+            (uploaded.mimeType.startsWith("video/")
+              ? "video"
+              : uploaded.mimeType.startsWith("image/")
+                ? "image"
+                : "document"),
+          sortOrder: mediaInput.sortOrder ?? index,
+          metadataJson: {
+            source: "r2",
+            uploadAssetId: uploaded.id,
+            accessLevel: uploaded.accessLevel,
+          },
+        });
+
+        await db
+          .update(uploadAsset)
+          .set({
+            propertyId: created.id,
+            uploadStatus: "attached",
+            updatedAt: new Date(),
+          })
+          .where(eq(uploadAsset.id, uploaded.id));
+      }
+    }
 
     return { success: true, property: created };
   } catch (error) {

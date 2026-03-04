@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -14,11 +15,13 @@ import {
 import { organization, user } from "./auth-schema";
 import { property } from "./property-core";
 import {
+  mediaAccessLevelEnum,
   notificationChannelEnum,
   outboxStatusEnum,
   rentalApplicationStatusEnum,
   threadMessageTypeEnum,
   threadParticipantRoleEnum,
+  uploadAssetStatusEnum,
 } from "./core-enums";
 
 export const domainEvent = pgTable(
@@ -107,6 +110,52 @@ export const notificationPreference = pgTable(
       table.userId,
       table.eventType,
     ),
+  ],
+);
+
+export const uploadAsset = pgTable(
+  "upload_asset",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    propertyId: uuid("property_id").references(() => property.id, {
+      onDelete: "set null",
+    }),
+    bucket: text("bucket").notNull(),
+    storageKey: text("storage_key").notNull(),
+    accessLevel: mediaAccessLevelEnum("access_level").default("public").notNull(),
+    mimeType: text("mime_type").notNull(),
+    bytes: bigint("bytes", { mode: "number" }),
+    checksum: text("checksum"),
+    uploadStatus: uploadAssetStatusEnum("upload_status")
+      .default("pending")
+      .notNull(),
+    metadataJson: jsonb("metadata_json").default({}).notNull(),
+    initIdempotencyKey: text("init_idempotency_key"),
+    completeIdempotencyKey: text("complete_idempotency_key"),
+    publicUrl: text("public_url"),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    uniqueIndex("upload_asset_storage_key_uidx").on(table.storageKey),
+    uniqueIndex("upload_asset_user_init_idempotency_uidx").on(
+      table.userId,
+      table.initIdempotencyKey,
+    ),
+    uniqueIndex("upload_asset_user_complete_idempotency_uidx").on(
+      table.userId,
+      table.completeIdempotencyKey,
+    ),
+    index("upload_asset_user_created_idx").on(table.userId, table.createdAt),
+    index("upload_asset_status_created_idx").on(table.uploadStatus, table.createdAt),
   ],
 );
 

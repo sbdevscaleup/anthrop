@@ -37,6 +37,18 @@ export const mediaTypeEnum = pgEnum("property_media_type", [
   "document",
 ]);
 
+export const mediaAccessLevelEnum = pgEnum("media_access_level", [
+  "public",
+  "private",
+]);
+
+export const uploadAssetStatusEnum = pgEnum("upload_asset_status", [
+  "pending",
+  "uploaded",
+  "failed",
+  "attached",
+]);
+
 export const roleAssignmentEnum = pgEnum("role_assignment", [
   "buyer",
   "seller",
@@ -78,4 +90,15 @@ export const threadParticipantRoleEnum = pgEnum("thread_participant_role", [
 export const threadMessageTypeEnum = pgEnum("thread_message_type", [
   "text",
   "system",
+]);
+
+export const propertyAttributeValueTypeEnum = pgEnum(
+  "property_attribute_value_type",
+  ["number", "string", "boolean", "enum", "json"],
+);
+
+export const propertyAttributeScopeEnum = pgEnum("property_attribute_scope", [
+  "global",
+  "category",
+  "subcategory",
 ]);
