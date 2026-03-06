@@ -15,6 +15,10 @@ import {
 import { organization, user } from "./auth-schema";
 import { property } from "./property-core";
 import {
+  leadActivityTypeEnum,
+  leadPriorityEnum,
+  leadSourceEnum,
+  leadStatusEnum,
   mediaAccessLevelEnum,
   notificationChannelEnum,
   outboxStatusEnum,
@@ -159,6 +163,104 @@ export const uploadAsset = pgTable(
   ],
 );
 
+export const propertyAgentAssignment = pgTable(
+  "property_agent_assignment",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    propertyId: uuid("property_id")
+      .notNull()
+      .references(() => property.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id").references(() => organization.id, {
+      onDelete: "set null",
+    }),
+    agentUserId: text("agent_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    assignedByUserId: text("assigned_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+    endedAt: timestamp("ended_at"),
+    reason: text("reason"),
+  },
+  (table) => [
+    index("property_agent_assignment_property_idx").on(table.propertyId, table.endedAt),
+    index("property_agent_assignment_agent_active_idx").on(
+      table.agentUserId,
+      table.endedAt,
+      table.assignedAt,
+    ),
+    uniqueIndex("property_agent_assignment_active_uidx")
+      .on(table.propertyId)
+      .where(sql`${table.endedAt} IS NULL`),
+  ],
+);
+
+export const propertyLead = pgTable(
+  "property_lead",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    propertyId: uuid("property_id")
+      .notNull()
+      .references(() => property.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id").references(() => organization.id, {
+      onDelete: "set null",
+    }),
+    sourceType: leadSourceEnum("source_type").notNull(),
+    sourceId: uuid("source_id"),
+    assignedUserId: text("assigned_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    status: leadStatusEnum("status").default("new").notNull(),
+    priority: leadPriorityEnum("priority").default("medium").notNull(),
+    firstResponseAt: timestamp("first_response_at"),
+    lastActivityAt: timestamp("last_activity_at").defaultNow().notNull(),
+    closedAt: timestamp("closed_at"),
+    metadataJson: jsonb("metadata_json").default({}).notNull(),
+    createdByUserId: text("created_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    index("property_lead_org_status_assignee_activity_idx").on(
+      table.organizationId,
+      table.status,
+      table.assignedUserId,
+      table.lastActivityAt,
+    ),
+    index("property_lead_property_status_idx").on(table.propertyId, table.status),
+    uniqueIndex("property_lead_source_uidx")
+      .on(table.sourceType, table.sourceId)
+      .where(sql`${table.sourceId} IS NOT NULL`),
+  ],
+);
+
+export const leadActivity = pgTable(
+  "lead_activity",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    leadId: uuid("lead_id")
+      .notNull()
+      .references(() => propertyLead.id, { onDelete: "cascade" }),
+    actorUserId: text("actor_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    activityType: leadActivityTypeEnum("activity_type").notNull(),
+    payloadJson: jsonb("payload_json").default({}).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("lead_activity_lead_created_idx").on(table.leadId, table.createdAt),
+    index("lead_activity_actor_idx").on(table.actorUserId),
+  ],
+);
+
 export const rentalApplication = pgTable(
   "rental_application",
   {
@@ -175,6 +277,13 @@ export const rentalApplication = pgTable(
     decidedByUserId: text("decided_by_user_id").references(() => user.id, {
       onDelete: "set null",
     }),
+    leadId: uuid("lead_id").references(() => propertyLead.id, {
+      onDelete: "set null",
+    }),
+    assignedReviewerUserId: text("assigned_reviewer_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    decisionNote: text("decision_note"),
     deletedAt: timestamp("deleted_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -186,6 +295,11 @@ export const rentalApplication = pgTable(
     index("rental_application_property_status_idx").on(table.propertyId, table.status),
     index("rental_application_applicant_idx").on(table.applicantUserId),
     index("rental_application_decided_by_idx").on(table.decidedByUserId),
+    index("rental_application_assigned_status_created_idx").on(
+      table.assignedReviewerUserId,
+      table.status,
+      table.createdAt,
+    ),
     // Prevent duplicate active applications for the same user and property.
     index("rental_application_active_unique_idx")
       .on(table.propertyId, table.applicantUserId)
@@ -236,6 +350,9 @@ export const propertyThread = pgTable(
     organizationId: text("organization_id").references(() => organization.id, {
       onDelete: "set null",
     }),
+    leadId: uuid("lead_id").references(() => propertyLead.id, {
+      onDelete: "set null",
+    }),
     lastMessageAt: timestamp("last_message_at"),
     archivedAt: timestamp("archived_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -243,6 +360,10 @@ export const propertyThread = pgTable(
   (table) => [
     index("property_thread_property_idx").on(table.propertyId),
     index("property_thread_last_message_idx").on(table.lastMessageAt),
+    index("property_thread_org_last_message_idx").on(
+      table.organizationId,
+      table.lastMessageAt,
+    ),
   ],
 );
 
@@ -367,5 +488,58 @@ export const notificationRelations = relations(notification, ({ one }) => ({
   organization: one(organization, {
     fields: [notification.organizationId],
     references: [organization.id],
+  }),
+}));
+
+export const propertyAgentAssignmentRelations = relations(
+  propertyAgentAssignment,
+  ({ one }) => ({
+    property: one(property, {
+      fields: [propertyAgentAssignment.propertyId],
+      references: [property.id],
+    }),
+    organization: one(organization, {
+      fields: [propertyAgentAssignment.organizationId],
+      references: [organization.id],
+    }),
+    agent: one(user, {
+      fields: [propertyAgentAssignment.agentUserId],
+      references: [user.id],
+    }),
+    assignedBy: one(user, {
+      fields: [propertyAgentAssignment.assignedByUserId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const propertyLeadRelations = relations(propertyLead, ({ one, many }) => ({
+  property: one(property, {
+    fields: [propertyLead.propertyId],
+    references: [property.id],
+  }),
+  organization: one(organization, {
+    fields: [propertyLead.organizationId],
+    references: [organization.id],
+  }),
+  assignedUser: one(user, {
+    fields: [propertyLead.assignedUserId],
+    references: [user.id],
+  }),
+  createdByUser: one(user, {
+    fields: [propertyLead.createdByUserId],
+    references: [user.id],
+  }),
+  activities: many(leadActivity),
+}));
+
+export const leadActivityRelations = relations(leadActivity, ({ one }) => ({
+  lead: one(propertyLead, {
+    fields: [leadActivity.leadId],
+    references: [propertyLead.id],
+  }),
+  actorUser: one(user, {
+    fields: [leadActivity.actorUserId],
+    references: [user.id],
   }),
 }));

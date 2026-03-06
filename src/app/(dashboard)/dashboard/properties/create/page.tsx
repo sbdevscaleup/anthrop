@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import z from "zod";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { useAppForm } from "@/shared/form/hooks";
 import { FieldGroup } from "@/shared/ui/field";
 import { SelectItem } from "@/shared/ui/select";
@@ -75,7 +76,7 @@ function createIdempotencyKey(prefix: string) {
   return `${prefix}-${Date.now()}-${crypto.randomUUID()}`;
 }
 
-export default function CreatePropertyPage() {
+export function CreatePropertyPageForm() {
   const [categories, setCategories] = useState<TaxonomyItem[]>([]);
   const [subcategories, setSubcategories] = useState<TaxonomyItem[]>([]);
   const [attributes, setAttributes] = useState<AttributeDefinition[]>([]);
@@ -545,4 +546,14 @@ export default function CreatePropertyPage() {
       </form>
     </div>
   );
+}
+
+export default function LegacyCreatePropertyPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/dashboard/seller/listings/new");
+  }, [router]);
+
+  return null;
 }

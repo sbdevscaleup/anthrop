@@ -3,7 +3,10 @@ export type AuthSession = {
     id: string;
   };
   session: {
+    id?: string;
+    token?: string;
     activeOrganizationId?: string | null;
+    activePersona?: "renter" | "buyer" | "seller" | "agent" | null;
   };
 };
 

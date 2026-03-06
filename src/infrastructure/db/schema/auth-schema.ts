@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { dashboardPersonaEnum } from "./core-enums";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -34,6 +35,7 @@ export const session = pgTable("session", {
     .references(() => user.id, { onDelete: "cascade" }),
   impersonatedBy: text("impersonated_by"),
   activeOrganizationId: text("active_organization_id"),
+  activePersona: dashboardPersonaEnum("active_persona"),
 });
 
 export const account = pgTable("account", {
@@ -98,6 +100,7 @@ export const invitation = pgTable("invitation", {
   role: text("role"),
   status: text("status").default("pending").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   inviterId: text("inviter_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),

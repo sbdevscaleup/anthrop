@@ -64,6 +64,20 @@
       "when": 1772582400000,
       "tag": "0008_r2_upload_assets",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1772611200000,
+      "tag": "0009_dashboard_split_and_leads",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772710746394,
+      "tag": "0010_invitation_created_at",
+      "breakpoints": true
     }
   ]
 }

@@ -127,11 +127,11 @@ export function getPersonaDestination(
   options?: { activeOrganizationId?: string | null },
 ) {
   if (persona === "seller") {
-    return "/dashboard/properties/create";
+    return "/dashboard/seller/listings/new";
   }
 
   if (persona === "agent") {
-    return options?.activeOrganizationId ? "/dashboard/organizations" : "/dashboard";
+    return options?.activeOrganizationId ? "/dashboard/agent" : "/dashboard";
   }
 
   return "/";

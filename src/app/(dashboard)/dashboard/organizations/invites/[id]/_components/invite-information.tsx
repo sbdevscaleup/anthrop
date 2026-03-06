@@ -19,7 +19,7 @@ export function InviteInformation({
           await authClient.organization.setActive({
             organizationId: invitation.organizationId,
           })
-          router.push("/dashboard/organizations")
+          router.push("/dashboard/agent/organization")
         },
       },
     )

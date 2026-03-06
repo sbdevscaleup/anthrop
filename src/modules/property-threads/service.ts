@@ -7,6 +7,10 @@ import {
   threadMessage,
   threadParticipant,
 } from "@/infrastructure/db/schema";
+import {
+  createLeadActivity,
+  ensureLeadForThread,
+} from "@/modules/dashboard/application/lead-pipeline";
 import type { CreateThreadInput, SendMessageInput } from "./contracts";
 import { emitDomainEvent } from "../events/service";
 
@@ -23,7 +27,7 @@ async function assertThreadParticipant(threadId: string, userId: string) {
 }
 
 export async function createThread(actorUserId: string, input: CreateThreadInput) {
-  return db.transaction(async (tx) => {
+  const createdThread = await db.transaction(async (tx) => {
     const targetProperty = await tx.query.property.findFirst({
       where: and(eq(property.id, input.propertyId), isNull(property.deletedAt)),
       columns: { id: true, ownerUserId: true, agentUserId: true },
@@ -73,6 +77,9 @@ export async function createThread(actorUserId: string, input: CreateThreadInput
 
     return createdThread;
   });
+
+  await ensureLeadForThread(createdThread.id);
+  return createdThread;
 }
 
 export async function sendMessage(
@@ -82,7 +89,7 @@ export async function sendMessage(
 ) {
   await assertThreadParticipant(threadId, actorUserId);
 
-  return db.transaction(async (tx) => {
+  const createdMessage = await db.transaction(async (tx) => {
     const [created] = await tx
       .insert(threadMessage)
       .values({
@@ -127,6 +134,18 @@ export async function sendMessage(
 
     return created;
   });
+
+  const lead = await ensureLeadForThread(threadId);
+  if (lead) {
+    await createLeadActivity({
+      leadId: lead.id,
+      actorUserId,
+      activityType: "message_sent",
+      payload: { threadId, messageId: createdMessage.id },
+    });
+  }
+
+  return createdMessage;
 }
 
 export async function listThreadsForProperty(

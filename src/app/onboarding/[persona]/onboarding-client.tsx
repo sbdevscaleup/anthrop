@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { authClient } from "@/modules/auth/application/auth-client";
-import { completePersonaOnboarding } from "@/app/(auth)/auth/actions/persona";
+import {
+  completePersonaOnboarding,
+  skipPersonaOnboarding,
+} from "@/app/(auth)/auth/actions/persona";
 import {
   PERSONA_CONFIG,
   type AuthPersona,
@@ -51,6 +54,14 @@ export function PersonaOnboardingClient({
     });
   }
 
+  function handleSkip() {
+    startTransition(async () => {
+      const result = await skipPersonaOnboarding(persona);
+      router.push(result.destination);
+      router.refresh();
+    });
+  }
+
   return (
     <Card className="w-full rounded-[1.75rem] shadow-xl">
       <CardHeader>
@@ -76,7 +87,7 @@ export function PersonaOnboardingClient({
           <Button
             variant="outline"
             className="rounded-xl"
-            onClick={handleContinue}
+            onClick={handleSkip}
             disabled={isPending}
           >
             Skip for now
@@ -173,17 +184,17 @@ function AgentOnboardingClient({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button asChild className="w-full rounded-xl">
-            <Link
-              href={
-                pendingInviteId
-                  ? `/dashboard/organizations/invites/${pendingInviteId}`
-                  : "/dashboard/organizations"
-              }
-            >
-              {pendingInviteId ? "Review invitation" : "Open organizations"}
-            </Link>
-          </Button>
+          {pendingInviteId ? (
+            <Button asChild className="w-full rounded-xl">
+              <Link href={`/dashboard/agent/organization/invites/${pendingInviteId}`}>
+                Review invitation
+              </Link>
+            </Button>
+          ) : (
+            <Button className="w-full rounded-xl" variant="outline" disabled>
+              No pending invitation
+            </Button>
+          )}
           <p className="text-sm text-muted-foreground">
             {pendingInviteId
               ? "A pending invitation was found for your account."

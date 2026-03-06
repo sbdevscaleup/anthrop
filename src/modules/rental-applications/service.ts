@@ -6,6 +6,10 @@ import {
   rentalApplicationSnapshot,
   property,
 } from "@/infrastructure/db/schema";
+import {
+  ensureLeadForRentalApplication,
+  syncLeadForRentalDecision,
+} from "@/modules/dashboard/application/lead-pipeline";
 import { emitDomainEvent } from "../events/service";
 import type {
   CreateRentalApplicationInput,
@@ -16,7 +20,7 @@ export async function createRentalApplication(
   userId: string,
   input: CreateRentalApplicationInput,
 ) {
-  return db.transaction(async (tx) => {
+  const created = await db.transaction(async (tx) => {
     const targetProperty = await tx.query.property.findFirst({
       where: and(eq(property.id, input.propertyId), isNull(property.deletedAt)),
       columns: {
@@ -68,6 +72,9 @@ export async function createRentalApplication(
 
     return created;
   });
+
+  await ensureLeadForRentalApplication(created.id);
+  return created;
 }
 
 export async function listRentalApplications(
@@ -130,7 +137,7 @@ export async function decideRentalApplication(
     throw new Error("INVALID_STATUS");
   }
 
-  return db.transaction(async (tx) => {
+  const updated = await db.transaction(async (tx) => {
     const existing = await tx.query.rentalApplication.findFirst({
       where: and(eq(rentalApplication.id, id), isNull(rentalApplication.deletedAt)),
     });
@@ -160,6 +167,11 @@ export async function decideRentalApplication(
         decidedAt: input.status === "under_review" ? existing.decidedAt : new Date(),
         decidedByUserId:
           input.status === "under_review" ? existing.decidedByUserId : actorUserId,
+        assignedReviewerUserId:
+          input.status === "under_review"
+            ? actorUserId
+            : (existing.assignedReviewerUserId ?? actorUserId),
+        decisionNote: input.note ?? existing.decisionNote ?? null,
       })
       .where(eq(rentalApplication.id, id))
       .returning();
@@ -176,4 +188,7 @@ export async function decideRentalApplication(
 
     return updated;
   });
+
+  await syncLeadForRentalDecision(updated.id, actorUserId, input.status, input.note);
+  return updated;
 }

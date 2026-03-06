@@ -5,6 +5,7 @@ import { auth } from "@/modules/auth/infrastructure/auth";
 import {
   markPersonaOnboardingComplete,
   persistPersonaForUser,
+  setLastIntendedRole,
 } from "@/modules/auth/application/persona-state";
 import {
   authPersonaSchema,
@@ -39,6 +40,19 @@ export async function completePersonaOnboarding(role: string) {
   const session = await requireSession();
 
   await markPersonaOnboardingComplete(session.user.id, parsedRole);
+
+  return {
+    destination: getPersonaDestination(parsedRole, {
+      activeOrganizationId: session.session.activeOrganizationId ?? null,
+    }),
+  };
+}
+
+export async function skipPersonaOnboarding(role: string) {
+  const parsedRole = authPersonaSchema.parse(role);
+  const session = await requireSession();
+
+  await setLastIntendedRole(session.user.id, parsedRole);
 
   return {
     destination: getPersonaDestination(parsedRole, {

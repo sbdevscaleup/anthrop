@@ -143,7 +143,11 @@ export const auth = betterAuth({
         };
 
         if (user != null) {
-          await sendWelcomeEmail(user);
+          try {
+            await sendWelcomeEmail(user);
+          } catch (error) {
+            console.error("Failed to send welcome email.", error);
+          }
         }
       }
     }),

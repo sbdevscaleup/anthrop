@@ -58,6 +58,44 @@ export const roleAssignmentEnum = pgEnum("role_assignment", [
   "admin",
 ]);
 
+export const dashboardPersonaEnum = pgEnum("dashboard_persona", [
+  "renter",
+  "buyer",
+  "seller",
+  "agent",
+]);
+
+export const leadSourceEnum = pgEnum("lead_source", [
+  "inquiry",
+  "thread",
+  "rental_application",
+  "manual",
+]);
+
+export const leadStatusEnum = pgEnum("lead_status", [
+  "new",
+  "contacted",
+  "qualified",
+  "under_review",
+  "closed_won",
+  "closed_lost",
+]);
+
+export const leadPriorityEnum = pgEnum("lead_priority", [
+  "low",
+  "medium",
+  "high",
+  "urgent",
+]);
+
+export const leadActivityTypeEnum = pgEnum("lead_activity_type", [
+  "note",
+  "status_changed",
+  "assignment_changed",
+  "message_sent",
+  "application_status_changed",
+]);
+
 export const outboxStatusEnum = pgEnum("outbox_status", [
   "pending",
   "processing",

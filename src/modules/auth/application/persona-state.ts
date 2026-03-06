@@ -268,7 +268,7 @@ function getResolvedDestination(
   },
 ) {
   if (persona === "agent" && options.pendingAgentInviteId) {
-    return `/dashboard/organizations/invites/${options.pendingAgentInviteId}`;
+    return `/dashboard/agent/organization/invites/${options.pendingAgentInviteId}`;
   }
 
   if (!options.onboardingCompletedRoles.includes(persona)) {
